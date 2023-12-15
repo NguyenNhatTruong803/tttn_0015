@@ -80,7 +80,7 @@ Route::middleware('sitelogin')->group(function () {
 Route::get('admin/login', [LoginController::class, 'getlogin'])->name('admin.getlogin');
 Route::post('admin/login', [LoginController::class, 'postlogin'])->name('admin.postlogin');
 Route::get('admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
-Route::prefix('admin')->middleware('adminlogin')->group(function () {
+Route::prefix('admin')->group(function () {
     //Trang Admin
     //BrandController================================================================================================
     Route::get('brand/trash', [BrandController::class, 'trash'])->name('brand.trash');

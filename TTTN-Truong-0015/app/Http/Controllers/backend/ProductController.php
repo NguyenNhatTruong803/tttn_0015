@@ -11,6 +11,8 @@ use App\Models\Product;
 use App\Models\Product_images;
 use App\Models\Product_sale;
 use App\Models\User;
+use App\Models\Size;
+use App\Models\Color;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -295,32 +297,37 @@ class ProductController extends Controller
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     public function edit($id)
-    {
-        $title = 'Cập Nhật Sản Phẩm';
-        $product = Product::where('product.id', $id)
-            ->join('product_sale', 'product.id', '=', 'product_sale.product_id')
-            ->select('product.*', 'product_sale.price_sale', 'product_sale.date_begin', 'product_sale.date_end')
-            ->first();
-        if ($product == null) {
-            return redirect()->route('product.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại']);
-        }
-        $image = Product_images::where('product_id', $id)->get();
-        $list_brand = Brand::where('status', '!=', '0')
-            ->get();
-        $list_category = Category::where('status', '!=', '0')
-            ->get();
-        $str_option_category = "";
-        $str_option_brand = "";
-        foreach ($list_category as $category) {
-            $str_option_category .= "<option value='" . $category->id . "'" . (($category->id == old('category_id', $product->category_id)) ? 'selected' : ' ') . ">" . $category->name . "</option>";
-        }
+{
+    $title = 'Cập Nhật Sản Phẩm';
+    $product = Product::where('product.id', $id)
+        ->join('product_sale', 'product.id', '=', 'product_sale.product_id')
+        ->select('product.*', 'product_sale.price_sale', 'product_sale.date_begin', 'product_sale.date_end')
+        ->first();
 
-        foreach ($list_brand as $brand) {
-            $str_option_brand .= "<option value='" . $brand->id . "'" . (($brand->id == old('brand_id', $product->brand_id)) ? 'selected' : ' ') . ">" . $brand->name . "</option>";
-        }
-
-        return view("backend.product.edit", compact('title', 'product', 'str_option_category', 'str_option_brand', 'image'));
+    if ($product == null) {
+        return redirect()->route('product.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại']);
     }
+
+    // Fetch existing images associated with the product
+    $images = Product_images::where('product_id', $id)->get();
+
+    $list_brand = Brand::where('status', '!=', '0')->get();
+    $list_category = Category::where('status', '!=', '0')->get();
+
+    $str_option_category = "";
+    $str_option_brand = "";
+
+    foreach ($list_category as $category) {
+        $str_option_category .= "<option value='" . $category->id . "'" . (($category->id == old('category_id', $product->category_id)) ? 'selected' : ' ') . ">" . $category->name . "</option>";
+    }
+
+    foreach ($list_brand as $brand) {
+        $str_option_brand .= "<option value='" . $brand->id . "'" . (($brand->id == old('brand_id', $product->brand_id)) ? 'selected' : ' ') . ">" . $brand->name . "</option>";
+    }
+
+    return view("backend.product.edit", compact('title', 'product', 'str_option_category', 'str_option_brand', 'images'));
+}
+
     public function update(ProductUpdateRequest $request, $id)
     {
         $request->validate([

@@ -3,28 +3,28 @@
 namespace App\Http\Controllers\backend;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\BrandStoreRequest;
-use App\Http\Requests\BrandUpdateRequest;
-use App\Models\Brand;
+use App\Http\Requests\CategoryStoreRequest;
+use App\Http\Requests\CategoryUpdateRequest;
+use App\Models\Category;
 use App\Models\Link;
+use App\Models\Menu;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
-class BrandController extends Controller
+class CategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $brand = Brand::where('status', '!=', '0')
+        $category = Category::where('status', '!=', '0')
             ->orderBy('created_at', 'desc')
             ->get();
-        $title = 'Tất Cả Thương Hiệu';
-        return view("backend.brand.index", compact('brand', 'title'));
+        $title = 'Tất Cả Danh Mục';
+        return view("backend.category.index", compact('category', 'title'));
     }
 
     /**
@@ -32,51 +32,73 @@ class BrandController extends Controller
      */
     public function create()
     {
-        $title = 'Thêm Thương Hiệu';
-        $brand = Brand::where('status', '!=', '0')
+        $title = 'Thêm Danh Mục';
+        $category = Category::where('status', '!=', '0')
             ->get();
         $html_sort_order = "";
-        foreach ($brand as $item) {
-            $html_sort_order .= "<option value='" . ($item->sort_order + 1) . "'" . (($item->sort_order + 1 == old('sort_order')) ? ' selected ' : ' ') . " >Sau: " . $item->name . "</option>";
-        }
-        return view("backend.brand.create", compact('title', 'html_sort_order'));
-    }
+        $html_parent_id = "";
 
+        foreach ($category as $item) {
+            $html_sort_order .= "<option value='" . ($item->sort_order + 1) . "'" . (($item->sort_order + 1 == old('sort_order')) ? ' selected ' : ' ') . " >Sau: " . $item->name . "</option>";
+
+            $html_parent_id .= "<option value='" . $item->id . "'" . (($item->id == old('parent_id')) ? ' selected ' : ' ') . ">" . $item->name . "</option>";
+        }
+        return view("backend.category.create", compact('title', 'html_sort_order', 'html_parent_id'));
+    }
+    public function status($id)
+    {
+
+        $category = Category::find($id);
+        if ($category == null) {
+            return redirect()->route('category.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại!']);
+        }
+
+        $category->status = ($category->status == 1) ? 2 : 1;
+
+        $category->updated_at = date('Y-m-d H:i:s');
+        $category->updated_by = 1;
+        if ($category->save()) {
+            if ($category->status == 2) {
+                $category->product()->update([
+                    'status' => 2,
+                    'updated_by' => 1
+                ]);
+                $category->menu()->update([
+                    'status' => 2,
+                    'updated_by' => 1
+                ]);
+            }
+            return redirect()->route('category.index')->with('message', ['type' => 'success', 'msg' => 'Thay đổi trạng thái thành công!']);
+        }
+    }
     /**
      * Store a newly created resource in storage.
      */
-    public function store(BrandStoreRequest $request)
+    public function store(CategoryStoreRequest $request)
     {
-        $brand = new Brand();
-        $brand->name = $request->name;
-        $brand->slug = Str::slug($request->name, '-');
-        $brand->metakey = $request->metakey;
-        $brand->metadesc = $request->metadesc;
-        $brand->sort_order = $request->sort_order;
-        // $brand->level = 1;
-        $brand->status = $request->status;
-        $brand->created_at = date('Y-m-d H:i:s');
-        $brand->created_by = 1;
+        $category = new Category();
+        $category->name = $request->name;
+        $category->slug = Str::slug($request->name, '-');
+        $category->metakey = $request->metakey;
+        $category->metadesc = $request->metadesc;
+        $category->sort_order = $request->sort_order;
+        $category->parent_id = $request->parent_id;
+        $category->level = 1;
+        $category->status = $request->status;
+        $category->created_at = date('Y-m-d H:i:s');
+        $category->created_by = 1;
         //upload file
 
-        if ($request->hasFile('image')) {
-            $path = 'images/brand/';
-            $file = $request->file('image');
-            $extension = $file->getClientOriginalExtension();
-            $filename = $brand->slug . '.' . $extension;
-            $file->move($path, $filename);
-            $brand->image = $filename;
-        }
-        if ($brand->save()) {
+        if ($category->save()) {
             $link = new Link();
-            $link->slug = $brand->slug;
-            $link->table_id = $brand->id;
-            $link->type = 'brand';
+            $link->slug = $category->slug;
+            $link->table_id = $category->id;
+            $link->type = 'category';
             $link->save();
-            return redirect()->route('brand.index')->with('message', ['type' => 'success', 'msg' => 'Thêm thành công!']);
+            return redirect()->route('category.index')->with('message', ['type' => 'success', 'msg' => 'Thêm thành công!']);
         }
 
-        return redirect()->route('brand.create')->with('message', ['type' => 'danger', 'msg' => 'Thêm thất bại!!']);
+        return redirect()->route('category.create')->with('message', ['type' => 'danger', 'msg' => 'Thêm thất bại!!']);
     }
 
     /**
@@ -84,12 +106,12 @@ class BrandController extends Controller
      */
     public function show($id)
     {
-        $brand = Brand::find($id);
-        if ($brand == null) {
-            return redirect()->route('brand.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại']);
+        $category = Category::find($id);
+        if ($category == null) {
+            return redirect()->route('category.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại']);
         }
-        $title = 'Chi Tiết Thương Hiệu';
-        return view("backend.brand.show", compact('title', 'brand'));
+        $title = 'Chi Tiết Danh Mục';
+        return view("backend.category.show", compact('title', 'category'));
     }
 
     /**
@@ -97,82 +119,76 @@ class BrandController extends Controller
      */
     public function edit($id)
     {
-
-        $brand = Brand::where([['status', '!=', '0'], ['id', '=', $id]])->first();
-        if ($brand == null) {
-            return redirect()->route('brand.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại']);
+        $title = 'Sửa Danh Mục';
+        $category = Category::where([['status', '!=', '0'], ['id', '=', $id]])->first();
+        if ($category == null) {
+            return redirect()->route('category.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại!']);
         }
-        $title = 'Sửa Thương Hiệu';
-        $list = Brand::where([['status', '!=', '0'], ['id', '!=', $id]])
+        $list = Category::where([['status', '!=', '0'], ['id', '!=', $id]])
             ->orderBy('created_at', 'desc')->get();
 
         $html_sort_order = "";
+        $html_parent_id = "";
         foreach ($list as $item) {
 
-            $html_sort_order .= "<option value='" . ($item->sort_order + 1) . "'" . (($item->sort_order + 1 == old('sort_order', $brand->sort_order)) ? ' selected ' : ' ') . ">Sau: " . $item->name . "</option>";
+            $html_sort_order .= "<option value='" . ($item->sort_order + 1) . "'" . (($item->sort_order + 1 == old('sort_order', $category->sort_order)) ? ' selected ' : ' ') . ">Sau: " . $item->name . "</option>";
+            $html_parent_id .= "<option value='" . $item->id . "'" . (($item->id == old('parent_id', $category->parent_id)) ? ' selected ' : ' ') . ">" . $item->name . "</option>";
         }
-        return view("backend.brand.edit", compact('title', 'html_sort_order', 'brand'));
+        return view("backend.category.edit", compact('title', 'html_sort_order', 'category', 'html_parent_id'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(BrandUpdateRequest $request, $id)
+    public function update(CategoryUpdateRequest $request, $id)
     {
         $request->validate([
             'name' => [
-                Rule::unique('brand', 'name')->ignore($id),
+                Rule::unique('category', 'name')->ignore($id),
                 Rule::unique('product', 'name'),
-                Rule::unique('category', 'name'),
+                Rule::unique('brand', 'name'),
                 Rule::unique('topic', 'name'),
                 Rule::unique('post', 'title'),
             ]
         ], [
             'name.unique' => 'Tên đã được sử dụng. Vui lòng chọn tên khác.'
         ]);
-        $brand = Brand::find($id);
-        $brand->name = $request->name;
-        $brand->slug = Str::slug($request->name, '-');
-        $brand->metakey = $request->metakey;
-        $brand->metadesc = $request->metadesc;
-        $brand->sort_order = $request->sort_order;
-        // $brand->level = 1;
-        $brand->status = $request->status;
-        $brand->updated_at = date('Y-m-d H:i:s');
-        $brand->updated_by = 1;
+        $category = Category::find($id);
+        $category->name = $request->name;
+        $category->slug = Str::slug($request->name, '-');
+        $category->metakey = $request->metakey;
+        $category->metadesc = $request->metadesc;
+        $category->sort_order = $request->sort_order;
+        $category->parent_id = $request->parent_id;
+        $category->level = 1;
+        $category->status = $request->status;
+        $category->updated_at = date('Y-m-d H:i:s');
+        $category->updated_by = 1;
         //upload file
 
-        if ($request->hasFile('image')) {
-            $path = 'images/brand/';
-            if (File::exists(public_path($path . $brand->image))) {
-                File::delete(public_path($path . $brand->image));
-            }
-            $file = $request->file('image');
-            $extension = $file->getClientOriginalExtension();
-            $filename = $brand->slug . '.' . $extension;
-            $file->move($path, $filename);
-            $brand->image = $filename;
-        }
-        if ($brand->save()) {
-            if ($brand->status == 2) {
-                $brand->product()->update([
+        if ($category->save()) {
+            if ($category->status == 2) {
+                $category->product()->update([
                     'status' => 2,
                     'updated_by' => 1
                 ]);
-                $brand->menu()->update([
+                $category->menu()->update([
                     'status' => 2,
                     'updated_by' => 1
                 ]);
             }
-            $brand->link()->update(['slug' => $brand->slug]);
-            $brand->menu()->update([
-                'name' => $brand->name,
-                'link' => $brand->slug,
+            $category->link()->update([
+                'slug' => $category->slug,
+            ]);
+            $category->menu()->update([
+                'name' => $category->name,
+
+                'link' => $category->slug,
                 'updated_by' => 1
             ]);
-            return redirect()->route('brand.index')->with('message', ['type' => 'success', 'msg' => 'Cập nhật thành công!']);
+            return redirect()->route('category.index')->with('message', ['type' => 'success', 'msg' => 'Cập nhật thành công!']);
         }
-        return redirect()->route('brand.edit')->with('message', ['type' => 'danger', 'msg' => 'Cập nhật thất bại!!']);
+        return redirect()->route('category.edit')->with('message', ['type' => 'danger', 'msg' => 'Cập nhật thất bại!!']);
     }
 
     /**
@@ -180,112 +196,42 @@ class BrandController extends Controller
      */
     public function destroy($id)
     {
-        $brand = Brand::find($id);
-        if ($brand == null) {
-            return redirect()->route('brand.trash')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại!']);
+        $category = Category::find($id);
+        if ($category == null) {
+            return redirect()->route('category.trash')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại!']);
         }
-        if ($brand->delete()) {
-
-            $brand->product()->update([
+        if ($category->delete()) {
+            $category->product()->update([
                 'status' => 0,
                 'updated_by' => 1
             ]);
-            $brand->menu()->delete();
-            $brand->link()->delete();
-            $path = 'images/brand/';
-            if (File::exists(public_path($path . $brand->image))) {
-                File::delete(public_path($path . $brand->image));
-            }
-            return redirect()->route('brand.trash')->with('message', ['type' => 'success', 'msg' => 'Xóa vĩnh viễn thành công!']);
+            $category->menu()->delete();
+            $category->link()->delete();
+            return redirect()->route('category.trash')->with('message', ['type' => 'success', 'msg' => 'Xóa vĩnh viễn thành công!']);
         }
-        return redirect()->route('brand.trash')->with('message', ['type' => 'danger', 'msg' => 'Xóa thất bại!']);
+        return redirect()->route('category.trash')->with('message', ['type' => 'danger', 'msg' => 'Xóa thất bại!']);
     }
-
-    public function trash()
-    {
-        //$list=Product::all();//try van tat ca
-        $brand = Brand::where('status', '=', 0)->Orderby('updated_at', 'asc')->get();
-        $title = 'Thùng rác thương hiệu';
-        return view("backend.brand.trash", compact('brand', 'title'));
-    }
-
-    public function trash_multi(Request $request)
-    {
-        $path = 'images/brand/';
-
-        if (isset($request['DELETE_ALL'])) {
-            if (isset($request->checkId)) {
-                $list_id = $request->input('checkId');
-                $count_max = sizeof($list_id);
-                $count = 0;
-                foreach ($list_id as $id) {
-                    $brand = Brand::find($id);
-                    if ($brand == null) {
-                        return redirect()->route('brand.trash')->with('message', ['type' => 'danger', 'msg' => "Có mẫu tin không tồn tại!&&Đã xóa $count/$count_max !"]);
-                    }
-                    if ($brand->delete()) {
-                        if (File::exists(public_path($path . $brand->image))) {
-                            File::delete(public_path($path . $brand->image));
-                        }
-                        $brand->product()->update([
-                            'status' => 0,
-                            'updated_by' => 1
-                        ]);
-                        $brand->menu()->delete();
-                        $brand->link()->delete();
-                        $count++;
-                    }
-                }
-                return redirect()->route('brand.trash')->with('message', ['type' => 'success', 'msg' => "Xóa vĩnh viễn thành công $count/$count_max !"]);
-            } else {
-                return redirect()->route('brand.trash')->with('message', ['type' => 'danger', 'msg' => 'Chưa chọn mẫu tin!']);
-            }
-        }
-        if (isset($request['RESTORE_ALL'])) {
-            if (isset($request->checkId)) {
-                $list_id = $request->input('checkId');
-                $count_max = sizeof($list_id);
-                $count = 0;
-                foreach ($list_id as $id) {
-                    $brand = Brand::find($id);
-                    if ($brand == null) {
-                        return redirect()->route('brand.trash')->with('message', ['type' => 'danger', 'msg' => "Có mẫu tin không tồn tại!&&Đã phục hồi $count/$count_max !"]);
-                    }
-
-                    $brand->status = 2;
-                    $brand->updated_at = date('Y-m-d H:i:s');
-                    $brand->updated_by = 1;
-                    $brand->save();
-                    $count++;
-                }
-                return redirect()->route('brand.index')->with('message', ['type' => 'success', 'msg' => "Phục hồi thành công $count/$count_max !"]);
-            } else {
-                return redirect()->route('brand.trash')->with('message', ['type' => 'danger', 'msg' => 'Chưa chọn mẫu tin!']);
-            }
-        }
-    }
-
     public function delete($id)
     {
-        $brand = Brand::find($id);
-        if ($brand == null) {
-            return redirect()->route('brand.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại!']);
+        $category = Category::find($id);
+        if ($category == null) {
+            return redirect()->route('category.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại!']);
         }
-        $brand->status = 0;
-        $brand->updated_at = date('Y-m-d H:i:s');
-        $brand->updated_by = 1;
-        if ($brand->save()) {
-            if ($brand->status == 0) {
-                $brand->product()->update([
+        $category->status = 0;
+        $category->updated_at = date('Y-m-d H:i:s');
+        $category->updated_by = 1;
+        if ($category->save()) {
+            if ($category->status == 0) {
+                $category->product()->update([
                     'status' => 0,
                     'updated_by' => 1
                 ]);
-                $brand->menu()->update([
+                $category->menu()->update([
                     'status' => 0,
                     'updated_by' => 1
                 ]);
             }
-            return redirect()->route('brand.index')->with('message', ['type' => 'success', 'msg' => 'Xóa thành công!&& vào thùng rác để xem!!!']);
+            return redirect()->route('category.index')->with('message', ['type' => 'success', 'msg' => 'Xóa thành công!&& vào thùng rác để xem!!!']);
         }
     }
     public function delete_multi(Request $request)
@@ -295,71 +241,102 @@ class BrandController extends Controller
             $count_max = sizeof($list_id);
             $count = 0;
             foreach ($list_id as $id) {
-
-                $brand = Brand::find($id);
-                if ($brand == null) {
-                    return redirect()->route('brand.index')->with('message', ['type' => 'danger', 'msg' => "Có mẫu tin không tồn tại!Đã xóa $count/$count_max ! "]);
+                $category = Category::find($id);
+                if ($category == null) {
+                    return redirect()->route('category.index')->with('message', ['type' => 'danger', 'msg' => "Có mẫu tin không tồn tại!Đã xóa $count/$count_max ! "]);
                 }
-                $brand->status = 0;
-                $brand->updated_at = date('Y-m-d H:i:s');
-                $brand->updated_by = 1;
-                $brand->save();
-                if ($brand->status == 0) {
-                    $brand->product()->update([
-                        'status' => 0,
-                        'updated_by' => 1
-                    ]);
-                    $brand->menu()->update([
-                        'status' => 0,
-                        'updated_by' => 1
-                    ]);
+                $category->status = 0;
+                $category->updated_at = date('Y-m-d H:i:s');
+                $category->updated_by = 1;
+                if ($category->save()) {
+                    if ($category->status == 0) {
+                        $category->product()->update([
+                            'status' => 0,
+                            'updated_by' => 1
+                        ]);
+                        $category->menu()->update([
+                            'status' => 0,
+                            'updated_by' => 1
+                        ]);
+                    }
                 }
                 $count++;
             }
-            return redirect()->route('brand.index')->with('message', ['type' => 'success', 'msg' => "Xóa thành công $count/$count_max !&& Vào thùng rác để xem!!!"]);
+            return redirect()->route('category.index')->with('message', ['type' => 'success', 'msg' => "Xóa thành công $count/$count_max !&& Vào thùng rác để xem!!!"]);
         } else {
-            return redirect()->route('brand.index')->with('message', ['type' => 'danger', 'msg' => 'Chưa chọn mẫu tin!']);
+            return redirect()->route('category.index')->with('message', ['type' => 'danger', 'msg' => 'Chưa chọn mẫu tin!']);
         }
     }
-
-    public function status($id)
+    public function trash()
+    {
+        //$list=Product::all();//try van tat ca
+        $category = Category::where('status', '=', 0)->Orderby('updated_at', 'asc')->get();
+        $title = 'Thùng rác danh mục';
+        return view("backend.category.trash", compact('category', 'title'));
+    }
+    public function trash_multi(Request $request)
     {
 
-        $brand = Brand::find($id);
-        if ($brand == null) {
-            return redirect()->route('brand.index')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại!']);
-        }
-
-        $brand->status = ($brand->status == 1) ? 2 : 1;
-        $brand->updated_at = date('Y-m-d H:i:s');
-        $brand->updated_by = 1;
-        if ($brand->save()) {
-            if ($brand->status == 2) {
-                $brand->product()->update([
-                    'status' => 2,
-                    'updated_by' => 1
-                ]);
-                $brand->menu()->update([
-                    'status' => 2,
-                    'updated_by' => 1
-                ]);
+        if (isset($request['DELETE_ALL'])) {
+            if (isset($request->checkId)) {
+                $list_id = $request->input('checkId');
+                $count_max = sizeof($list_id);
+                $count = 0;
+                foreach ($list_id as $id) {
+                    $category = Category::find($id);
+                    if ($category == null) {
+                        return redirect()->route('category.trash')->with('message', ['type' => 'danger', 'msg' => "Có mẫu tin không tồn tại!&&Đã xóa $count/$count_max !"]);
+                    }
+                    if ($category->delete()) {
+                        $category->product()->update([
+                            'status' => 0,
+                            'updated_by' => 1
+                        ]);
+                        $category->menu()->delete();
+                        $category->link()->delete();
+                        $count++;
+                    }
+                }
+                return redirect()->route('category.trash')->with('message', ['type' => 'success', 'msg' => "Xóa vĩnh viễn thành công $count/$count_max !"]);
+            } else {
+                return redirect()->route('category.trash')->with('message', ['type' => 'danger', 'msg' => 'Chưa chọn mẫu tin!']);
             }
-            return redirect()->route('brand.index')->with('message', ['type' => 'success', 'msg' => 'Thay đổi trạng thái thành công!']);
+        }
+        if (isset($request['RESTORE_ALL'])) {
+            if (isset($request->checkId)) {
+                $list_id = $request->input('checkId');
+                $count_max = sizeof($list_id);
+                $count = 0;
+                foreach ($list_id as $id) {
+                    $category = Category::find($id);
+                    if ($category == null) {
+                        return redirect()->route('category.trash')->with('message', ['type' => 'danger', 'msg' => "Có mẫu tin không tồn tại!&&Đã phục hồi $count/$count_max !"]);
+                    }
+
+                    $category->status = 2;
+                    $category->updated_at = date('Y-m-d H:i:s');
+                    $category->updated_by = 1;
+                    $category->save();
+                    $count++;
+                }
+                return redirect()->route('category.index')->with('message', ['type' => 'success', 'msg' => "Phục hồi thành công $count/$count_max !"]);
+            } else {
+                return redirect()->route('category.trash')->with('message', ['type' => 'danger', 'msg' => 'Chưa chọn mẫu tin!']);
+            }
         }
     }
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
     public function restore($id)
     {
 
-        $brand = Brand::find($id);
-        if ($brand == null) {
-            return redirect()->route('brand.trash')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại!']);
+        $category = Category::find($id);
+        if ($category == null) {
+            return redirect()->route('category.trash')->with('message', ['type' => 'danger', 'msg' => 'Mẫu tin không tồn tại!']);
         }
 
-        $brand->status = 2;
-        $brand->updated_at = date('Y-m-d H:i:s');
-        $brand->updated_by = 1;
-        $brand->save();
-        return redirect()->route('brand.index')->with('message', ['type' => 'success', 'msg' => 'Phục hồi thành công!']);
+        $category->status = 2;
+        $category->updated_at = date('Y-m-d H:i:s');
+        $category->updated_by = 1;
+        $category->save();
+        return redirect()->route('category.index')->with('message', ['type' => 'success', 'msg' => 'Phục hồi thành công!']);
     }
 }
