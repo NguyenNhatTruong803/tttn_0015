@@ -59,6 +59,14 @@
                                         type="button" role="tab" aria-controls="sales" aria-selected="false">Khuyến
                                         Mãi</button>
                                 </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="store-tab" data-bs-toggle="tab" data-bs-target="#store"
+                                        type="button" role="tab" aria-controls="store" aria-selected="false">Nhập Hàng</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="option-tab" data-bs-toggle="tab" data-bs-target="#option"
+                                        type="button" role="tab" aria-controls="option" aria-selected="false">Thuộc tính sản phẩm</button>
+                                </li>
                             </ul>
                             <div class="tab-content p-3  border-right border-left border-bottom" id="myTabContent">
                                 {{-- Chính --}}
@@ -79,6 +87,16 @@
 
 
                                 </div>
+
+                                <div class="tab-pane fade" id="store" role="tabpanel" aria-labelledby="store-tab">
+                                    @includeIf('backend.product.create.tab_product-store')
+
+                                </div>
+
+                                <div class="tab-pane fade" id="option" role="tabpanel" aria-labelledby="option-tab">
+                                    @includeIf('backend.product.create.tab_product-option')
+                                </div>
+
                                 {{-- Khách Hàng[Tìm] --}}
                                 <div class="tab-pane fade" id="details" role="tabpanel" aria-labelledby="details-tab">
                                     @includeIf('backend.product.create.tab_product-details')

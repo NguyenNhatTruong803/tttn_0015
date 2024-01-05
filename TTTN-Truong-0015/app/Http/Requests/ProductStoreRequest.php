@@ -31,6 +31,10 @@ class ProductStoreRequest extends FormRequest
             'price_sale' => 'nullable|required_with:date_begin,date_end|numeric|min:1000|lte:price',
             'date_begin' => 'nullable|required_with:date_end|date',
             'date_end' => 'nullable|required_with:date_begin|date|after:date_begin',
+            'size' => 'required|string|max:255|in:Cỡ nhỏ,Cỡ phổ biến,Cỡ lớn,Cỡ rất lớn',
+            'color' => 'required|string|max:255|in:Red,Black,Blue',
+            'store_name' => 'required|string|max:255',
+            'price_store' => 'required|numeric|min:1000',
            
         ];
     }

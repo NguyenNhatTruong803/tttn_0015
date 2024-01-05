@@ -25,7 +25,7 @@
                             <span class="ten">{{ $product->name }}</span>
                         </div>
                         <div class="col-12 gia">
-                            <p> <strong>8,500,000đ</strong></p>
+                            <p> <strong>{{ $product->price }}đ</strong></p>
                         </div>
                     </div>
                 @endforeach

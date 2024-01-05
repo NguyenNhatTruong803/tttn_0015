@@ -1,4 +1,4 @@
-<x-main-menu />
+
 
 <div class="my-1">
     <section class="tr-footer">

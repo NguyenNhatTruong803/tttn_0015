@@ -35,11 +35,19 @@ class Product extends Model
     }
     public function size()
     {
-        return $this->belongsTo(Size::class);
+        return $this->hasMany(Product_size::class);
     }
 
     public function color()
     {
-        return $this->belongsTo(Color::class);
+        return $this->hasMany(Product_color::class);
+    }
+    public function store()
+    {
+        return $this->hasOne(Product_store::class);
+    }
+    public function options(): HasOne
+    {
+        return $this->hasOne(Product_option::class);
     }
 }

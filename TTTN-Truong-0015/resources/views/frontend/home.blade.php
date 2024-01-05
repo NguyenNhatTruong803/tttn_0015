@@ -3,10 +3,11 @@
 @section('content')
 
 
-
+    <x-main-menu />
     <x-slider-show />
 
     @foreach ($list_category as $row_category)
+    
         <x-product-home :rowcat="$row_category" />
     @endforeach
 

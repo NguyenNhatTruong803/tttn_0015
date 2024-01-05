@@ -56,18 +56,18 @@
                         <table class="table table-bordered" id="myTable">
                             <thead class="bg-primary">
                                 <tr>
-                                    <th class="text-center" style="width:5%">
+                                    <th class="text-center" style="width:2%">
                                         <div class="form-group select-all">
                                             <input type="checkbox" id="select-all">
                                         </div>
                                     </th>
-                                    <th class="text-center" style="width:10%">Hình</th>
-                                    <th class="text-center" style="width:20%">Tên sản phẩm</th>
-                                    <th class="text-center" style="width:15%">Danh mục</th>
+                                    <th class="text-center" style="width:50%">Hình</th>
+                                    <th class="text-center" style="width:10%">Tên sản phẩm</th>
+                                    <th class="text-center" style="width:8%">Danh mục</th>
                                     <th class="text-center" style="width:10%">Thương hiệu</th>
-                                    <th class="text-center" style="width:15%">Ngày tạo</th>
-                                    <th class="text-center" style="width:20%">Chức năng</th>
-                                    <th class="text-center" style="width:5%">ID</th>
+                                    <th class="text-center" style="width:10%">Ngày tạo</th>
+                                    <th class="text-center" style="width:8%">Chức năng</th>
+                                    <th class="text-center" style="width:2%">ID</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -81,9 +81,10 @@
                                         </td>
                                         <td>
                                             @foreach ($row->images as $image)
-                                                <a href="{{ route('product.image', ['product' => $row->id]) }}">
-                                                    <img src="{{ asset('images/product/' . $image->image) }}" class="img-fluid" alt="">
-                                                    
+                                                <a href="{{ route('product.image', ['product' => $row->id]) }} " >
+                                                    <img src="{{ asset('images/product/' . $image->image) }}"
+                                                        class="img-fluid" style="max-width: 20%;" alt="">
+
                                                 </a>
                                             @endforeach
                                         </td>
@@ -107,30 +108,38 @@
 
                                             @if ($row->status == 1)
                                                 <a class="btn btn-sm btn-success"
-                                                    href="{{ route('product.status', ['product' => $row->id]) }}">
+                                                    href="{{ route('product.status', ['product' => $row->id]) }}"
+                                                    style="margin: 5px; padding: 5px 10px;">
                                                     <i class="fas fa-toggle-on"></i>
                                                 </a>
                                             @else
                                                 <a class="btn btn-sm btn-danger"
-                                                    href="{{ route('product.status', ['product' => $row->id]) }}">
+                                                    href="{{ route('product.status', ['product' => $row->id]) }}"
+                                                    style="margin: 5px; padding: 5px 10px;">
                                                     <i class="fas fa-toggle-off"></i>
                                                 </a>
                                             @endif
 
                                             <a class="btn btn-sm btn-info"
-                                                href="{{ route('product.show', ['product' => $row->id]) }}">
+                                                href="{{ route('product.show', ['product' => $row->id]) }}"
+                                                style="margin: 5px; padding: 5px 10px;">
                                                 <i class="fas fa-eye"></i>
                                             </a>
 
                                             <a class="btn btn-sm btn-primary"
-                                                href="{{ route('product.edit', ['product' => $row->id]) }}">
-                                                <i class=" fas fa-edit"></i>
+                                                href="{{ route('product.edit', ['product' => $row->id]) }}"
+                                                style="margin: 5px; padding: 5px 10px;">
+                                                <i class="fas fa-edit"></i>
                                             </a>
+
                                             <a class="btn btn-sm btn-danger"
-                                                href="{{ route('product.delete', ['product' => $row->id]) }}">
+                                                href="{{ route('product.delete', ['product' => $row->id]) }}"
+                                                style="margin: 5px; padding: 5px 10px;">
                                                 <i class="fas fa-trash"></i>
                                             </a>
+
                                         </td>
+
                                         <td class="text-center" style="width:20px">
                                             {{ $row->id }}
                                         </td>

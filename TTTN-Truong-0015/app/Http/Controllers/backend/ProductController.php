@@ -11,8 +11,10 @@ use App\Models\Product;
 use App\Models\Product_images;
 use App\Models\Product_sale;
 use App\Models\User;
-use App\Models\Size;
-use App\Models\Color;
+use App\Models\Product_color;
+use App\Models\Product_size;
+use App\Models\Product_store;
+use App\Models\Product_option;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -122,6 +124,20 @@ class ProductController extends Controller
             $category_name = $product->category->name;
             return redirect()->route('product.trash')->with('message', ['type' => 'danger', 'msg' => "Danh mục $category_name đang trong thùng rác  "]);
         }
+
+        // if ($request->filled('size')) {
+        //     $product_option = new Product_size();
+        //     $product_option->size = $request->size;
+        //     $product->options()->save($product_option);
+        // }
+        // if ($request->filled('color')) {
+        //     $product_option = new Product_color();
+        //     $product_option->color = $request->color;
+        //     $product->options()->save($product_option);
+        // }
+        // /////
+        
+        
         $product->status = 2;
         $product->updated_at = date('Y-m-d H:i:s');
         $product->save();
@@ -259,7 +275,6 @@ class ProductController extends Controller
         $product->metadesc = $request->metadesc;
         $product->category_id = $request->category_id;
         $product->brand_id = $request->brand_id;
-        $product->qty = $request->qty;
         $product->price = $request->price;
         // $product->level = 1;
         $product->status = $request->status;
@@ -288,6 +303,20 @@ class ProductController extends Controller
                     $product->images()->save($product_images);
                     $count++;
                 }
+            }
+            if ($request->filled('size') || $request->filled('color')) {
+                $product_option = new Product_option();
+                $product_option->size = $request->size;
+                $product_option->color = $request->color;
+                $product->options()->save($product_option);
+            }
+
+            if ($request->filled('price_store')) {
+                $product_store = new Product_store();
+                $product_store->store_name = $request->store_name;
+                $product_store->price_store = $request->price_store;
+                $product_store->qty = $request->qty;
+                $product->store()->save($product_store);
             }
             return redirect()->route('product.index')->with('message', ['type' => 'success', 'msg' => 'Thêm thành công!']);
         } else {
