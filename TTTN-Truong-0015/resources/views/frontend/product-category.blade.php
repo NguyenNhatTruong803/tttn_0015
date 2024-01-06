@@ -5,7 +5,16 @@
     <div class="container my-4">
         <div class="row">
             <div class="col-md-3">
-                aaa
+                <h4>Danh Mục</h4>
+                <ul>
+                    @foreach ($list_category as $category)
+                        <li>
+                            <span><a class="H21" style="text-decoration: none; color:black"
+                                href="{{ route('slug.index', ['slug' => $category->slug]) }}">{{ $category->name }}</a></span>
+                        </li>
+                        
+                    @endforeach
+                </ul>
             </div>
             <div class="col-md-9">
                 <section class="sanpham">

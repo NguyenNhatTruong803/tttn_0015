@@ -46,7 +46,7 @@
     <!----sanpham--------------------------------------------------------------------------------->
 
     <!------------------------------------------------------------------->
-    <section class="tr-copyright bg-dark">
+    <section class="tr-copyright bg-dark" >
         <div class="day bg-warning"></div>
         <div>
             <div class="container mt-2">

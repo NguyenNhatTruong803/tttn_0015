@@ -94,27 +94,6 @@ class SiteController extends Controller
     }
     protected function product_category($slug)
     {
-        // $cat = Category::where([['status', '=', '1'], ['slug', '=', $slug]])->first();
-        // // $list_category = Category::where('status', '1')->orderBy('created_at', 'desc')->get();
-        // // $list_brand = Brand::where('status', '1')->orderBy('created_at', 'desc')->get();
-        // if (isset($_GET['ten'])) {
-        //     $ten = $_GET['ten'];
-        //     $ten = $ten == 'z-a' ? 'desc' : 'asc';
-        //     $list_product = Product::with(['sale' => function ($query) {
-        //         $query->whereRaw('? between date_begin and date_end', [now()]);
-        //     }])->where('status', '1')->whereIn('category_id', [$cat->id])->Orderby('name', $ten)->paginate($this->paginate);
-        // } elseif (isset($_GET['gia'])) {
-        //     $gia = $_GET['gia'];
-        //     $gia = $gia == 'giam' ? 'desc' : 'asc';
-        //     $list_product = Product::with(['sale' => function ($query) {
-        //         $query->whereRaw('? between date_begin and date_end', [now()]);
-        //     }])->where('status', '1')->whereIn('category_id', [$cat->id])->Orderby('price', $gia)->paginate($this->paginate);
-        // } else {
-        //     $list_product = Product::with(['sale' => function ($query) {
-        //         $query->whereRaw('? between date_begin and date_end', [now()]);
-        //     }])->where('status', '=', '1')->whereIn('category_id', [$cat->id])->OrderBy('created_at', 'desc')->paginate($this->paginate);
-        // }
-        // return view('frontend.product-category', compact('list_product', 'cat'));
         $row_cat=Category::where([['slug','=',$slug],['status', '=', '1']])->first();;
         $list_category_id=array();
         array_push($list_category_id,$row_cat->id);
@@ -140,13 +119,17 @@ class SiteController extends Controller
                 }
             }
         }
+
         $product_list=Product::
             with(['sale' => function ($query) {$query->whereRaw('? between date_begin and date_end', [now()]);}])->where('status', '=', '1')
             ->whereIn('category_id', $list_category_id)
             ->orderBy('created_at', 'desc')
             ->paginate(9);
-            
-        return view('frontend.product-category',compact('row_cat','product_list'));
+        $list_category = Category::where([
+                ['parent_id', '=', 0],
+                ['status', '=', 1]
+            ])->orderBy('sort_order', 'asc')->get();
+        return view('frontend.product-category',compact('row_cat','product_list','list_category'));
     }
     protected function product_brand($slug)
     {
@@ -170,7 +153,9 @@ class SiteController extends Controller
                 $query->whereRaw('? between date_begin and date_end', [now()]);
             }])->where('status', '=', '1')->whereIn('brand_id', [$brand->id])->OrderBy('created_at', 'desc')->paginate($this->paginate);
         }
-        return view('frontend.product_brand', compact('list_product', 'brand'));
+        $brands = Brand::where('status', '!=', '0')->get();
+
+        return view('frontend.product_brand', compact('list_product', 'brand','brands'));
     }
     public function all_post()
     {
@@ -222,3 +207,27 @@ class SiteController extends Controller
         return view('errors.404', compact('slug'));
     }
 }
+
+
+
+        // $cat = Category::where([['status', '=', '1'], ['slug', '=', $slug]])->first();
+        // // $list_category = Category::where('status', '1')->orderBy('created_at', 'desc')->get();
+        // // $list_brand = Brand::where('status', '1')->orderBy('created_at', 'desc')->get();
+        // if (isset($_GET['ten'])) {
+        //     $ten = $_GET['ten'];
+        //     $ten = $ten == 'z-a' ? 'desc' : 'asc';
+        //     $list_product = Product::with(['sale' => function ($query) {
+        //         $query->whereRaw('? between date_begin and date_end', [now()]);
+        //     }])->where('status', '1')->whereIn('category_id', [$cat->id])->Orderby('name', $ten)->paginate($this->paginate);
+        // } elseif (isset($_GET['gia'])) {
+        //     $gia = $_GET['gia'];
+        //     $gia = $gia == 'giam' ? 'desc' : 'asc';
+        //     $list_product = Product::with(['sale' => function ($query) {
+        //         $query->whereRaw('? between date_begin and date_end', [now()]);
+        //     }])->where('status', '1')->whereIn('category_id', [$cat->id])->Orderby('price', $gia)->paginate($this->paginate);
+        // } else {
+        //     $list_product = Product::with(['sale' => function ($query) {
+        //         $query->whereRaw('? between date_begin and date_end', [now()]);
+        //     }])->where('status', '=', '1')->whereIn('category_id', [$cat->id])->OrderBy('created_at', 'desc')->paginate($this->paginate);
+        // }
+        // return view('frontend.product-category', compact('list_product', 'cat'));

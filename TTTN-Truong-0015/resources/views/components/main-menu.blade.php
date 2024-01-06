@@ -3,7 +3,7 @@
         <div class="container ">
             <nav class="navbar navbar-expand-lg backgruond">
                 <div class="container-fluid">
-                    <a class="navbar-brand text-light" href="KT2.html">Trang chủ</a>
+                    <a class="navbar-brand text-light" href="http://localhost/TTTN-Truong-0015/public/">Trang chủ</a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -11,23 +11,21 @@
                     </button>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                            @foreach ($list_menu as $row_menu)
-                                <li class="nav-item">
-                                    <a class="nav-link active text-light" aria-current="page"
-                                        href="#">{{ $row_menu->name }}</a>
-                                </li>
-                            @endforeach
-
+                            
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light" href="#" role="button"
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                     Sản phẩm
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="trong.html">Trống - Bộ gõ</a></li>
-                                    <li><a class="dropdown-item" href="piano.html">PIANO - ORGANS</a></li>
+                                    @foreach($list_menu as $row_menu)
+                                        <x-sub1-main-menu :rowmenu="$row_menu"/>
+                                    @endforeach
+                                    {{-- <li><a class="dropdown-item" href="trong.html">Trống - Bộ gõ</a></li>
+                                    <li><a class="dropdown-item" href="piano.html">PIANO - ORGANS</a></li> --}}
                                 </ul>
                             </li>
+                            
                             <li class="nav-item">
                                 <a class="nav-link text-light">Tin tức</a>
                             </li>
